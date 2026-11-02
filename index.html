@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Aniversário da Mariah 🧁</title>
+<meta name="theme-color" content="#ffd6e8">
+<style>
+  :root {
+    --rosa: #ff8fbf;
+    --rosa-claro: #ffe3f0;
+    --dourado: #e8b64c;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    width: 100%; height: 100%; overflow: hidden;
+    background: linear-gradient(160deg, #ffd9ea, #f3d9ff 60%, #d9ecff);
+    font-family: "Georgia", "Times New Roman", serif;
+    touch-action: manipulation;
+    user-select: none; -webkit-user-select: none;
+  }
+
+  /* Palco 9:16 centralizado */
+  .stage {
+    position: relative;
+    height: 100vh; height: 100dvh;
+    width: min(100vw, calc(100vh * 9 / 16));
+    width: min(100vw, calc(100dvh * 9 / 16));
+    aspect-ratio: 9 / 16;
+    max-height: 100dvh;
+    margin: 0 auto;
+    top: 50%; transform: translateY(-50%);
+    overflow: hidden;
+    background: #ffe3f0;
+    box-shadow: 0 0 40px rgba(200, 100, 160, .25);
+  }
+
+  .tela {
+    position: absolute; inset: 0;
+    opacity: 0; visibility: hidden;
+    transition: opacity .7s ease, visibility .7s ease;
+  }
+  .tela.ativa { opacity: 1; visibility: visible; }
+  .tela img.fundo, .tela video {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: contain;
+    pointer-events: none;
+    -webkit-user-drag: none;
+  }
+  #tela-capa { cursor: pointer; }
+  #tela-video { background: #000; }
+
+  /* Botões sutis */
+  .botao-suave {
+    position: absolute; left: 50%; transform: translateX(-50%);
+    bottom: calc(5% + env(safe-area-inset-bottom, 0px));
+    padding: 9px 22px;
+    font-family: inherit; font-style: italic;
+    font-size: clamp(13px, 3.6vw, 16px);
+    letter-spacing: .04em;
+    color: #fff;
+    text-shadow: 0 1px 4px rgba(190, 70, 130, .55);
+    background: rgba(255, 255, 255, .22);
+    border: 1px solid rgba(255, 255, 255, .65);
+    border-radius: 999px;
+    -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+    box-shadow: 0 4px 16px rgba(220, 110, 170, .25);
+    cursor: pointer;
+    transition: background .3s ease, transform .2s ease;
+    z-index: 5;
+  }
+  .botao-suave:hover { background: rgba(255, 255, 255, .38); }
+  .botao-suave:active { transform: translateX(-50%) scale(.96); }
+  #btn-pular { opacity: 0; animation: surgir 1s ease 1.5s forwards; }
+  #btn-voltar {
+    color: #c2457f;
+    text-shadow: none;
+    background: rgba(255, 255, 255, .6);
+    border-color: rgba(232, 182, 76, .8);
+  }
+  #btn-voltar:hover { background: rgba(255, 255, 255, .85); }
+  @keyframes surgir { to { opacity: 1; } }
+
+  /* Áreas clicáveis da página interativa (em % da imagem) */
+  .area {
+    position: absolute;
+    top: 63.5%; height: 15.5%;
+    display: block;
+    border-radius: 18px;
+    cursor: pointer;
+    z-index: 3;
+  }
+  #area-local { left: 37.5%; width: 20%; }
+  #area-confirmar { left: 58%; width: 19%; }
+  #area-presente { left: 77.5%; width: 20%; }
+
+  /* Cupcakes e brilhos */
+  #efeitos {
+    position: fixed; inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 100;
+  }
+  .cupcake, .brilho {
+    position: absolute;
+    left: 0; top: 0;
+    pointer-events: none;
+    will-change: transform, opacity;
+  }
+  .cupcake { animation: voar var(--dur) cubic-bezier(.2, .7, .3, 1) forwards; }
+  .cupcake svg { display: block; width: var(--tam); height: auto; filter: drop-shadow(0 2px 3px rgba(220, 100, 160, .35)); }
+  .brilho { animation: cintilar var(--dur) ease-out forwards; color: var(--cor); font-size: var(--tam); line-height: 1; text-shadow: 0 0 6px rgba(255, 255, 255, .9); }
+
+  @keyframes voar {
+    0%   { transform: translate(var(--x), var(--y)) scale(.2) rotate(0deg); opacity: 0; }
+    15%  { opacity: 1; transform: translate(calc(var(--x) + var(--dx) * .25), calc(var(--y) + var(--dy) * .25)) scale(1.05) rotate(calc(var(--rot) * .3)); }
+    100% { transform: translate(calc(var(--x) + var(--dx)), calc(var(--y) + var(--dy))) scale(.75) rotate(var(--rot)); opacity: 0; }
+  }
+  @keyframes cintilar {
+    0%   { transform: translate(var(--x), var(--y)) scale(0) rotate(0deg); opacity: 0; }
+    30%  { opacity: 1; transform: translate(calc(var(--x) + var(--dx) * .5), calc(var(--y) + var(--dy) * .5)) scale(1.2) rotate(90deg); }
+    100% { transform: translate(calc(var(--x) + var(--dx)), calc(var(--y) + var(--dy))) scale(.2) rotate(180deg); opacity: 0; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tela { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="stage" id="stage">
+
+  <!-- 1) Capa: clique em qualquer parte abre o vídeo -->
+  <section class="tela ativa" id="tela-capa" aria-label="Capa do convite">
+    <img class="fundo" src="primeira.jpg" alt="Clique no envelope para abrir" draggable="false">
+  </section>
+
+  <!-- 2) Vídeo -->
+  <section class="tela" id="tela-video" aria-label="Vídeo de abertura">
+    <video id="video" playsinline webkit-playsinline preload="auto"></video>
+    <button class="botao-suave" id="btn-pular" type="button">Pular introdução</button>
+  </section>
+
+  <!-- 3) Convite interativo -->
+  <section class="tela" id="tela-interativo" aria-label="Convite">
+    <img class="fundo" src="interativo.jpg" alt="Convite de aniversário da Mariah" draggable="false">
+    <a class="area" id="area-local" href="https://maps.app.goo.gl/P9No2zgeE5tzNkQe8" target="_blank" rel="noopener" aria-label="Localização"></a>
+    <a class="area" id="area-confirmar" href="https://wa.me/5521986663020?text=%F0%9F%A7%81Ol%C3%A1!%20Quero%20confirmar%20presen%C3%A7a%20no%20anivers%C3%A1rio%20da%20Mariah.%20%F0%9F%A7%81%0A%0ASeremos%3A%0A%0A(___)%20ADULTOS%0A*Nomes%3A*%0A%0A(___)%20CRIAN%C3%87AS%0A*Nomes%20e%20idades%3A*" target="_blank" rel="noopener" aria-label="Confirmar presença"></a>
+    <a class="area" id="area-presente" href="#" aria-label="Sugestão de presente"></a>
+  </section>
+
+  <!-- 4) Sugestões de presente -->
+  <section class="tela" id="tela-presentes" aria-label="Sugestões de presente">
+    <img class="fundo" src="presentes.jpg" alt="Sugestões de presente da Mariah" draggable="false">
+    <button class="botao-suave" id="btn-voltar" type="button">Voltar ao convite</button>
+  </section>
+
+</div>
+
+<div id="efeitos" aria-hidden="true"></div>
+
+<script>
+(function () {
+  /* Nome do vídeo. Se der problema com o acento no GitHub,
+     renomeie o arquivo para video.mp4 e troque aqui. */
+  var ARQUIVO_VIDEO = "vídeo.mp4";
+
+  var telas = {
+    capa: document.getElementById("tela-capa"),
+    video: document.getElementById("tela-video"),
+    interativo: document.getElementById("tela-interativo"),
+    presentes: document.getElementById("tela-presentes")
+  };
+  var video = document.getElementById("video");
+  video.src = encodeURI(ARQUIVO_VIDEO);
+
+  var atual = "capa";
+
+  function mostrar(nome) {
+    if (nome === atual) return;
+    Object.keys(telas).forEach(function (k) {
+      telas[k].classList.toggle("ativa", k === nome);
+    });
+    if (nome === "video") {
+      try { video.currentTime = 0; } catch (e) {}
+      var p = video.play();
+      if (p && p.catch) p.catch(function () { mostrar("interativo"); });
+    } else if (atual === "video") {
+      video.pause();
+    }
+    atual = nome;
+  }
+
+  /* Navegação */
+  telas.capa.addEventListener("click", function () { mostrar("video"); });
+  document.getElementById("btn-pular").addEventListener("click", function () { mostrar("interativo"); });
+  video.addEventListener("ended", function () { mostrar("interativo"); });
+  video.addEventListener("error", function () { if (atual === "video") mostrar("interativo"); });
+  document.getElementById("area-presente").addEventListener("click", function (e) {
+    e.preventDefault();
+    mostrar("presentes");
+  });
+  document.getElementById("btn-voltar").addEventListener("click", function () { mostrar("interativo"); });
+
+  /* Pré-carrega as imagens */
+  ["interativo.jpg", "presentes.jpg"].forEach(function (src) {
+    var i = new Image(); i.src = src;
+  });
+
+  /* ---------- Cupcakes e brilhos ao tocar ---------- */
+  var efeitos = document.getElementById("efeitos");
+  var reduzir = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  var CUPCAKE_SVG =
+    '<svg viewBox="0 0 40 46" xmlns="http://www.w3.org/2000/svg">' +
+      '<path d="M8 25 L12 43 Q20 46 28 43 L32 25 Z" fill="#f6c96f" stroke="#e2a94a" stroke-width="1"/>' +
+      '<path d="M15 26 L16 43 M20 26 L20 44 M25 26 L24 43" stroke="#e2a94a" stroke-width="1" stroke-linecap="round" opacity=".7"/>' +
+      '<path d="M4 26 Q2 17 11 16 Q10 8 20 8 Q30 8 29 16 Q38 17 36 26 Q20 31 4 26 Z" fill="#ffb5d2" stroke="#ff8fbf" stroke-width="1"/>' +
+      '<path d="M11 20 Q15 14 20 14" stroke="#fff" stroke-width="2" stroke-linecap="round" fill="none" opacity=".7"/>' +
+      '<path d="M20 9 C20 5 14 5 14 8.5 C14 11 18 12.5 20 14 C22 12.5 26 11 26 8.5 C26 5 20 5 20 9 Z" fill="#ff5c93" transform="translate(0,-4) scale(.9) translate(2,0)"/>' +
+      '<rect x="12" y="20" width="3" height="1.4" rx=".7" fill="#fff" transform="rotate(-25 13 20)"/>' +
+      '<rect x="24" y="19" width="3" height="1.4" rx=".7" fill="#b88bff" transform="rotate(30 25 19)"/>' +
+      '<rect x="18" y="23" width="3" height="1.4" rx=".7" fill="#7cc7ff" transform="rotate(-10 19 23)"/>' +
+      '<rect x="29" y="23" width="3" height="1.4" rx=".7" fill="#ffd45e" transform="rotate(20 30 23)"/>' +
+    '</svg>';
+
+  var CORES_BRILHO = ["#ffffff", "#ffe08a", "#ffb3d4", "#d9bbff"];
+  var FORMAS_BRILHO = ["✦", "✧", "✨", "·"];
+
+  function rand(a, b) { return a + Math.random() * (b - a); }
+
+  function soltar(el, ms) {
+    efeitos.appendChild(el);
+    setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, ms + 100);
+  }
+
+  function criarCupcake(x, y) {
+    var dur = rand(1100, 1700);
+    var ang = rand(0, Math.PI * 2);
+    var dist = rand(40, 110);
+    var el = document.createElement("div");
+    el.className = "cupcake";
+    el.style.setProperty("--x", x + "px");
+    el.style.setProperty("--y", y + "px");
+    el.style.setProperty("--dx", Math.cos(ang) * dist + "px");
+    el.style.setProperty("--dy", Math.sin(ang) * dist - rand(30, 80) + "px");
+    el.style.setProperty("--rot", rand(-35, 35) + "deg");
+    el.style.setProperty("--tam", rand(20, 32) + "px");
+    el.style.setProperty("--dur", dur + "ms");
+    el.innerHTML = CUPCAKE_SVG;
+    el.style.marginLeft = "-14px";
+    el.style.marginTop = "-14px";
+    soltar(el, dur);
+  }
+
+  function criarBrilho(x, y) {
+    var dur = rand(700, 1300);
+    var ang = rand(0, Math.PI * 2);
+    var dist = rand(30, 90);
+    var el = document.createElement("div");
+    el.className = "brilho";
+    el.textContent = FORMAS_BRILHO[Math.floor(Math.random() * FORMAS_BRILHO.length)];
+    el.style.setProperty("--x", x + "px");
+    el.style.setProperty("--y", y + "px");
+    el.style.setProperty("--dx", Math.cos(ang) * dist + "px");
+    el.style.setProperty("--dy", Math.sin(ang) * dist + "px");
+    el.style.setProperty("--tam", rand(10, 20) + "px");
+    el.style.setProperty("--cor", CORES_BRILHO[Math.floor(Math.random() * CORES_BRILHO.length)]);
+    el.style.setProperty("--dur", dur + "ms");
+    soltar(el, dur);
+  }
+
+  function explosao(x, y) {
+    if (reduzir) { criarCupcake(x, y); return; }
+    var nc = 3 + Math.floor(Math.random() * 2);   // 3 a 4 cupcakes
+    var nb = 7 + Math.floor(Math.random() * 3);   // 7 a 9 brilhos
+    for (var i = 0; i < nc; i++) criarCupcake(x, y);
+    for (var j = 0; j < nb; j++) criarBrilho(x, y);
+  }
+
+  document.addEventListener("pointerdown", function (e) {
+    explosao(e.clientX, e.clientY);
+  }, { passive: true });
+})();
+</script>
+</body>
+</html>
